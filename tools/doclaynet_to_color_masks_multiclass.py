@@ -3,7 +3,7 @@ from datasets import load_dataset
 from PIL import Image, ImageDraw
 import json, os, tqdm
 
-PROJECT = "doclaynet_mc"
+PROJECT = "doclaynet_multiclass"
 ROOT = Path(f"data/{PROJECT}")
 IMAGES = ROOT / "images"
 LABELS = ROOT / "labels"
@@ -62,8 +62,8 @@ def extract_boxes_and_ids(row):
         cids = [int(a["category_id"]) for a in anns]  # 0..10
         return bboxes, cids
 
-    if "category_ids" in row:
-        return bboxes, [int(c) for c in row["category_ids"]]  # 0..10
+    if "category_id" in row:
+        return bboxes, [int(c) for c in row["category_id"]]  # 0..10
 
     names = row.get("category_names") or row.get("categories")
     if names is not None:
@@ -148,7 +148,7 @@ def main():
     for s in SPLITS:
         process_split(s)
         write_split_csv(s)
-    print("✅ Done. Now you can point dhSegment-torch to data/doclaynet_mc/{train,val}.csv")
+    print("✅ Done. Now you can point dhSegment-torch to data/doclaynet_multiclass/{train,val}.csv")
 
 if __name__ == "__main__":
     main()
