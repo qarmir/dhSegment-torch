@@ -51,10 +51,8 @@ def process_split(split: str):
 
     for i, row in enumerate(tqdm.tqdm(ds, desc=split)):
         img: Image.Image = row["image"].convert("RGB")
-        # v1.1 exposes bboxes
         bboxes = row.get("bboxes")
         if bboxes is None:
-            # fallback for legacy layout if ever needed
             anns = row.get("annotations", {}).get("annotations", [])
             bboxes = [a["bbox"] for a in anns]
 
@@ -64,18 +62,36 @@ def process_split(split: str):
         if already_done(ip, mp):
             continue
 
-        # Save image (we keep original page RGB)
         safe_save(img, ip)
-
-        # Draw binary RGB mask (white = content)
         mask = draw_binary_rgb_mask(img.size, bboxes)
         safe_save(mask, mp)
+
+def write_split_csv(split: str):
+    """Create ROOT/<split>.csv with rows: images/<split>/<file>,labels/<split>/<file>"""
+    img_dir = IMAGES / split
+    lbl_dir = LABELS / split
+    assert img_dir.exists() and lbl_dir.exists(), f"Missing dirs for split '{split}'"
+
+    # Pair by identical filenames; only include existing non-empty pairs
+    rows = []
+    for ip in sorted(img_dir.glob("*.png")):
+        rp_img = ip.relative_to(ROOT).as_posix()  # images/train/000000.png
+        mp = lbl_dir / ip.name
+        if mp.exists() and mp.stat().st_size > 0 and ip.stat().st_size > 0:
+            rp_mask = mp.relative_to(ROOT).as_posix()
+            rows.append(f"{rp_img},{rp_mask}")
+
+    csv_path = ROOT / f"{split}.csv"
+    csv_path.write_text("\n".join(rows) + ("\n" if rows else ""), encoding="utf-8")
+    print(f"[info] {split}.csv written → {csv_path} ({len(rows)} pairs)")
 
 def main():
     write_color_labels()
     for s in SPLITS:
         process_split(s)
-    print("✅ Done. Now run prepare_data.py with a config pointing to data/doclaynet_binary")
+        write_split_csv(s)
+    print("✅ Done. Now you can point dhSegment-torch to data/doclaynet_binary/{train,val}.csv")
 
 if __name__ == "__main__":
     main()
+

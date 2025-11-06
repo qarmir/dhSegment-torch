@@ -125,11 +125,31 @@ def process_split(split: str):
         mask = draw_multiclass_rgb_mask(img.size, bboxes, cids)
         safe_save(mask, mp)
 
+def write_split_csv(split: str):
+    """Create ROOT/<split>.csv with rows: images/<split>/<file>,labels/<split>/<file>"""
+    img_dir = IMAGES / split
+    lbl_dir = LABELS / split
+    assert img_dir.exists() and lbl_dir.exists(), f"Missing dirs for split '{split}'"
+
+    rows = []
+    for ip in sorted(img_dir.glob("*.png")):
+        rp_img = ip.relative_to(ROOT).as_posix()
+        mp = lbl_dir / ip.name
+        if mp.exists() and mp.stat().st_size > 0 and ip.stat().st_size > 0:
+            rp_mask = mp.relative_to(ROOT).as_posix()
+            rows.append(f"{rp_img},{rp_mask}")
+
+    csv_path = ROOT / f"{split}.csv"
+    csv_path.write_text("\n".join(rows) + ("\n" if rows else ""), encoding="utf-8")
+    print(f"[info] {split}.csv written → {csv_path} ({len(rows)} pairs)")
+
 def main():
     write_color_labels()
     for s in SPLITS:
         process_split(s)
-    print("✅ Done. Now run prepare_data.py with data/doclaynet_mc")
+        write_split_csv(s)
+    print("✅ Done. Now you can point dhSegment-torch to data/doclaynet_mc/{train,val}.csv")
 
 if __name__ == "__main__":
     main()
+
