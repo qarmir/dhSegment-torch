@@ -2,6 +2,8 @@ from pathlib import Path
 from datasets import load_dataset
 from PIL import Image, ImageDraw
 import json, os, tqdm
+from typing import List, Optional
+import math
 
 PROJECT = "doclaynet_multiclass"
 ROOT = Path(f"data/{PROJECT}")
@@ -89,38 +91,63 @@ def draw_multiclass_rgb_mask(size, bboxes, cids):
     d = ImageDraw.Draw(m)
     # Note: dataset ids are 0..10; we map to 1..11 for colors
     for (x, y, bw, bh), cid in zip(bboxes, cids):
-        idx = int(cid) + 1
-        if not (0 <= idx < len(PALETTE)):
-            continue
-        d.rectangle([x, y, x + bw, y + bh], fill=PALETTE[idx])
+        if not (0 < cid < len(PALETTE)):
+            print(f"category id out of bounds {cid}")
+            exit(1)
+        d.rectangle([x, y, x + bw, y + bh], fill=PALETTE[cid])
     return m
 
-def write_color_labels():
+def calculate_class_weights(num_pixels: List[int]):
+    total_pixels = 0
+    for count in num_pixels:
+        total_pixels += count
+    weights = [1.0 / math.log(1.02 + count/total_pixels) for count in num_pixels]
+    total_weights = 0
+    for w in weights:
+        total_weights += w
+    return [w / total_weights for w in weights]
+
+def write_color_labels(num_pixels: List[int]):
     labels = ["background"] + CLASSES
     payload = {
         "colors": [list(c) for c in PALETTE],
         "one_hot_encoding": None,
-        "labels": labels
+        "labels": labels,
+        "weights": calculate_class_weights(num_pixels),
     }
     COLOR_LABELS_JSON.parent.mkdir(parents=True, exist_ok=True)
     COLOR_LABELS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(num_pixels)
     print(f"[info] color_labels.json written → {COLOR_LABELS_JSON}")
 
-def process_split(split: str):
+def count_pixels(bboxes, cids, num_pixels: List[int]):
+    background_pixels = 1024*1024
+    for (x, y, bw, bh), cid in zip(bboxes, cids):
+        if not (0 < cid < len(PALETTE)):
+            print(f"category id out of bounds {cid}")
+            exit(1)
+        box_pixels = bw * bh
+        background_pixels -= box_pixels
+        num_pixels[cid] += box_pixels
+    num_pixels[0] += background_pixels
+
+def process_split(split: str, num_pixels: List[int]):
     print(f"=== Processing {split} (multiclass, color PNG) ===")
     ds = load_dataset(DATASET_ID, split=split)
     (IMAGES / split).mkdir(parents=True, exist_ok=True)
     (LABELS / split).mkdir(parents=True, exist_ok=True)
 
     for i, row in enumerate(tqdm.tqdm(ds, desc=split)):
-        img = row["image"].convert("RGB")
         bboxes, cids = extract_boxes_and_ids(row)
+        if split == "train":
+            count_pixels(bboxes, cids, num_pixels)
 
         ip = IMAGES / split / f"{i:06d}.png"
         mp = LABELS / split / f"{i:06d}.png"
         if already_done(ip, mp):
             continue
 
+        img = row["image"].convert("RGB")
         safe_save(img, ip)
         mask = draw_multiclass_rgb_mask(img.size, bboxes, cids)
         safe_save(mask, mp)
@@ -144,11 +171,12 @@ def write_split_csv(split: str):
     print(f"[info] {split}.csv written → {csv_path} ({len(rows)} pairs)")
 
 def main():
-    write_color_labels()
+    num_pixels = [0] * len(PALETTE)
     for s in SPLITS:
-        process_split(s)
+        process_split(s, num_pixels)
         write_split_csv(s)
-    print("✅ Done. Now you can point dhSegment-torch to data/doclaynet_multiclass/{train,val}.csv")
+    write_color_labels(num_pixels)
+    print(f"✅ Done. Now you can point dhSegment-torch to data/{PROJECT}/{{train,val}}.csv")
 
 if __name__ == "__main__":
     main()
