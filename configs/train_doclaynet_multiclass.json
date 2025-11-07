@@ -1,0 +1,95 @@
+{
+   "batch_size": 6,
+   "color_labels": {
+      "label_json_file": "data/doclaynet_multiclass/color_labels.json",
+      "type": "json"
+   },
+   "early_stopping": {
+      "patience": 10
+   },
+   "evaluate_every_epoch": 1,
+   "loggers": [
+      {
+         "log_every": 20,
+         "log_images_every": 50,
+         "type": "tensorboard"
+      }
+   ],
+   "lr_scheduler": {
+      "gamma": 0.99950000000000006,
+      "type": "exponential"
+   },
+   "metrics": [
+      [
+         "miou",
+         "iou"
+      ],
+      [
+         "iou",
+         {
+            "average": null,
+            "type": "iou"
+         }
+      ],
+      "precision"
+   ],
+   "model": {
+      "decoder": {
+         "decoder_channels": [
+            512,
+            256,
+            128,
+            64,
+            32
+         ],
+         "max_channels": 512,
+         "type": "unet"
+      },
+      "encoder": {
+         "pretrained": true,
+         "type": "resnet50"
+      }
+   },
+   "model_out_dir": "checkpoints/doclaynet_binary_r50_unet",
+   "num_data_workers": 4,
+   "num_epochs": 100,
+   "optimizer": {
+      "lr": 1.0000000000000001e-04
+   },
+   "track_train_metrics": false,
+   "train_checkpoint": {
+      "checkpoints_to_keep": 2,
+      "type": "iteration"
+   },
+   "train_dataset": {
+      "base_dir": "data/doclaynet_multiclass",
+      "compose": {
+         "transforms": [
+            {
+               "output_size": 1000000,
+               "type": "fixed_size_resize"
+            }
+         ]
+      },
+      "csv_filename": "data/doclaynet_multiclass/train.csv",
+      "repeat_dataset": 1,
+      "type": "image_csv"
+   },
+   "val_checkpoint": {
+      "checkpoints_to_keep": 2
+   },
+   "val_dataset": {
+      "base_dir": "data/doclaynet_multiclass",
+      "compose": {
+         "transforms": [
+            {
+               "output_size": 1000000,
+               "type": "fixed_size_resize"
+            }
+         ]
+      },
+      "csv_filename": "data/doclaynet_multiclass/val.csv",
+      "type": "image_csv"
+   },
+   "val_metric": "+miou"
+}
