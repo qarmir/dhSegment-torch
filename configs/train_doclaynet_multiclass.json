@@ -10,13 +10,13 @@
    "evaluate_every_epoch": 1,
    "loggers": [
       {
-         "log_every": 20,
-         "log_images_every": 50,
+         "log_every": 50,
+         "log_images_every": 100,
          "type": "tensorboard"
       }
    ],
    "lr_scheduler": {
-      "gamma": 0.99950000000000006,
+      "gamma": 0.99997999999999998,
       "type": "exponential"
    },
    "metrics": [
@@ -35,26 +35,21 @@
    ],
    "model": {
       "decoder": {
-         "decoder_channels": [
-            512,
-            256,
-            128,
-            64,
-            32
-         ],
-         "max_channels": 512,
-         "type": "unet"
+         "decoder_channels_size": 512,
+         "type": "pan"
       },
       "encoder": {
          "pretrained": true,
          "type": "resnet50"
       }
    },
-   "model_out_dir": "checkpoints/doclaynet_binary_r50_unet",
+   "model_out_dir": "checkpoints/doclaynet_binary",
    "num_data_workers": 4,
    "num_epochs": 100,
    "optimizer": {
-      "lr": 1.0000000000000001e-04
+      "lr": 0.001,
+      "type": "adamw",
+      "weight_decay": 0.0001
    },
    "track_train_metrics": false,
    "train_checkpoint": {

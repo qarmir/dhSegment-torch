@@ -3,7 +3,7 @@ local segmentation = import './models/segmentation.libsonnet';
 
 {
     # Model definition
-    model: segmentation.resnet_50_unet,
+    model: segmentation.resnet_50_pan,
 
     # Define metrics, miou, iou per class and precision
     metrics: [
