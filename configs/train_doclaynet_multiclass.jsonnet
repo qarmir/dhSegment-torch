@@ -12,7 +12,7 @@ local fixed_size_resize = 1e6;
 
   optimizer: {
     type: "adamw",
-    lr: 1e-3,
+    lr: 2e-4,
     weight_decay: 1e-4
   },
 

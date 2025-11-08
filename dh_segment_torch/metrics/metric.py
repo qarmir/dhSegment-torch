@@ -25,7 +25,7 @@ class Metric(Registrable):
         multilabel: bool = False,
         ignore_padding: bool = False,
         margin: int = 0,
-        device: Optional[str] = "cpu",
+        device: Optional[str] = "cuda:0" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__()
         self.num_classes = num_classes
@@ -103,7 +103,7 @@ class MultilabelConfusionMetric(Metric):
         multilabel: bool = False,
         ignore_padding: bool = False,
         margin: int = 0,
-        device: Optional[str] = "cpu",
+        device: Optional[str] = "cuda:0" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(num_classes, multilabel, ignore_padding, margin, device)
         self.classes_labels = (
