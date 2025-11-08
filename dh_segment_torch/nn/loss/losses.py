@@ -63,7 +63,6 @@ class CrossEntropyLoss(Loss):
         """
         if ignore_padding or margin > 0:
             reduction = "none"
-        print(f"CrossEntropyWeights: {weights}")
         loss = torch.nn.CrossEntropyLoss(
             weight=torch.tensor(weights).to(torch.float)
             if weights is not None

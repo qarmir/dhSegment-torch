@@ -190,14 +190,11 @@ class SegmentationModel(Model):
         metrics = dict(zip(metric_names, metrics_built))
 
         if loss:
-            print(f"Loss function provided: {loss}")
             loss = loss.construct(ignore_padding=ignore_padding, margin=margin, weights=weights)
         else:
             if multilabel:
-                print("Loss: BCEWithLogitsLoss")
                 loss = BCEWithLogitsLoss(ignore_padding=ignore_padding, margin=margin, weights=weights)
             else:
-                print("Loss: CrossEntropyLoss")
                 loss = CrossEntropyLoss(ignore_padding=ignore_padding, margin=margin, weights=weights)
 
         return cls(encoder, decoder, loss, metrics)
