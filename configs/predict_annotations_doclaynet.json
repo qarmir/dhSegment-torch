@@ -1,0 +1,50 @@
+{
+   "batch_size": 6,
+   "data": {
+      "folder": "data/doclaynet_multiclass/to_predict",
+      "pre_processing": {
+         "transforms": [
+            {
+               "output_size": 1000000,
+               "type": "fixed_size_resize"
+            }
+         ]
+      },
+      "type": "folder"
+   },
+   "model": {
+      "color_labels": {
+         "label_json_file": "data/doclaynet_multiclass/color_labels.json",
+         "type": "json"
+      },
+      "dataset": {
+         "base_dir": "data/doclaynet_multiclass",
+         "compose": {
+            "transforms": [
+               {
+                  "output_size": 1000000,
+                  "type": "fixed_size_resize"
+               }
+            ]
+         },
+         "csv_filename": "data/doclaynet_multiclass/train.csv",
+         "repeat_dataset": 1,
+         "type": "image_csv"
+      },
+      "model": {
+         "decoder": {
+            "decoder_channels_size": 512,
+            "type": "pan"
+         },
+         "encoder": {
+            "pretrained": true,
+            "type": "resnet50"
+         }
+      },
+      "model_state_dict": "checkpoints/doclaynet_binary/train_model_checkpoint_iter=52501.pth",
+      "type": "training_config"
+   },
+   "writer": {
+      "type": "image"
+   }
+}
